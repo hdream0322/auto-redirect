@@ -18,8 +18,10 @@
 
 ### 1. 파일 내려받기
 
-- **[Releases](https://github.com/hdream0322/auto-redirect/releases)** 에서 최신 `auto-redirect-vX.Y.Z.zip` 을 받아 압축을 풉니다.
+- **[최신 릴리즈 zip 바로 받기](https://github.com/hdream0322/auto-redirect/releases/latest/download/auto-redirect.zip)** — 항상 가장 최근 버전을 내려받습니다. (버전별 파일은 [Releases](https://github.com/hdream0322/auto-redirect/releases/latest) 에서)
 - 또는 이 저장소를 통째로 `git clone` / ZIP 다운로드 합니다.
+
+받은 zip 을 원하는 위치에 압축 해제합니다. **이 폴더는 지우거나 옮기지 마세요** — Chrome 이 이 경로로 확장을 인식합니다.
 
 ### 2. Chrome 에 불러오기
 
@@ -28,7 +30,11 @@
 3. **압축해제된 확장 프로그램을 로드합니다** 클릭 → 1번에서 준비한 폴더(`manifest.json` 이 들어 있는 폴더) 선택
 4. 툴바에 아이콘이 생깁니다. 자주 쓴다면 퍼즐 조각 아이콘을 눌러 **고정** 해 두세요.
 
-업데이트할 때는 새 버전 파일로 폴더 내용을 교체한 뒤 `chrome://extensions` 에서 새로고침(↻) 을 누르면 됩니다.
+### 업데이트
+
+새 버전이 나오면 **기존과 같은 폴더**에 새 zip 내용을 덮어쓴 뒤 `chrome://extensions` 에서 새로고침(↻) 을 누르면 됩니다. 저장해 둔 규칙·그룹·설정은 그대로 유지됩니다.
+
+> 새 폴더에 따로 압축을 풀어 다시 "압축해제된 확장 프로그램을 로드" 하면 **별개의 확장으로 취급되어** 규칙이 딸려오지 않습니다. 이 경우에는 이전 확장에서 **설정 → 내보내기**로 JSON 을 저장한 뒤 새 확장에서 **가져오기** 하세요.
 
 ---
 
