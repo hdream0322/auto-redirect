@@ -1,19 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Auto Redirect",
-  "version": "1.0.0",
-  "description": "미리 저장한 규칙에 따라 특정 사이트 접속 시 지정한 사이트로 자동 리다이렉트합니다.",
-  "permissions": ["declarativeNetRequest", "storage"],
+  "name": "Ultimate Auto Redirecter",
+  "version": "1.1.0",
+  "description": "미리 저장한 규칙에 따라 특정 사이트 접속 시 지정한 사이트로 자동 리다이렉트합니다. 그룹·시간 조건·제외 패턴·정규식까지 지원합니다.",
+  "permissions": ["declarativeNetRequest", "storage", "alarms", "activeTab"],
   "host_permissions": ["<all_urls>"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
   "action": {
-    "default_title": "Auto Redirect",
+    "default_title": "Ultimate Auto Redirecter",
     "default_popup": "popup.html"
   }
 }

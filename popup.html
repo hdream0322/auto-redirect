@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="theme.css" />
   <style>
-    body { width: 300px; padding: 16px; }
+    body { width: 320px; padding: 16px; }
     .top {
       display: flex;
       align-items: center;
@@ -25,20 +25,118 @@
       font-size: 12px;
       color: var(--muted);
     }
-    .btn.primary { width: 100%; margin-top: 12px; }
+
+    .snooze {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .snooze .lead { font-size: 12px; color: var(--muted); margin-right: auto; }
+    .snooze .btn { padding: 5px 8px; font-size: 12px; }
+    .snooze .btn[aria-pressed="true"] {
+      background: var(--route);
+      border-color: var(--route);
+      color: #fff;
+    }
+    #snoozeState {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--route);
+      font-weight: 600;
+    }
+    #snoozeClear { margin-top: 6px; padding: 5px 9px; font-size: 12px; }
+
+    .quick { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .quick .site {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      margin: 0 0 8px;
+    }
+    .quick input, .quick select {
+      width: 100%;
+      font: inherit;
+      font-size: 12.5px;
+      padding: 7px 9px;
+      margin-bottom: 7px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .quick input { font-family: var(--mono); }
+    .quick input:focus-visible, .quick select:focus-visible {
+      outline: 2px solid var(--route);
+      outline-offset: 0;
+      border-color: transparent;
+    }
+    .quick .row { display: flex; gap: 6px; }
+    .quick .row .btn { flex: 1; padding: 7px 10px; font-size: 12.5px; }
+
+    #notice {
+      display: block;
+      margin-top: 10px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--danger);
+      background: color-mix(in srgb, var(--danger) 10%, var(--paper));
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    #msg { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
+    #msg.ok { color: var(--on); }
+    #msg.err { color: var(--danger); }
+
+    .btn.block { width: 100%; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div class="top">
-    <span class="wordmark" id="wordmark"><span class="dot"></span>Auto Redirect</span>
+    <span class="wordmark" id="wordmark"><span class="dot"></span>Auto Redirecter</span>
     <button class="master" id="master" role="switch" aria-checked="true" aria-label="자동 리다이렉트 켜기/끄기"></button>
   </div>
 
   <p class="state" id="state">불러오는 중…</p>
   <span class="count" id="count"></span>
+  <span id="notice" hidden></span>
 
-  <button class="btn primary" id="openOptions">규칙 설정 열기</button>
+  <div class="snooze">
+    <span class="lead">잠시 멈추기</span>
+    <button class="btn" data-snooze="15" aria-pressed="false">15분</button>
+    <button class="btn" data-snooze="60" aria-pressed="false">1시간</button>
+    <button class="btn" data-snooze="today" aria-pressed="false">오늘</button>
+  </div>
+  <span id="snoozeState" hidden></span>
+  <button class="btn ghost" id="snoozeClear" hidden>지금 해제</button>
 
-  <script src="popup.js"></script>
+  <div class="quick">
+    <button class="btn block" id="quickToggle" style="margin-top:0">＋ 현재 페이지 규칙 만들기</button>
+    <div id="quickForm" hidden style="margin-top:10px">
+      <p class="site" id="quickSite"></p>
+      <input type="text" id="quickFrom" placeholder="naver.com" aria-label="원본 주소" />
+      <input type="text" id="quickTo" placeholder="https://daum.net" aria-label="대상 주소" />
+      <select id="quickMode" aria-label="매칭 방식">
+        <option value="site">도메인 전체</option>
+        <option value="exact">정확히 일치</option>
+        <option value="prefix">접두사 일치</option>
+        <option value="replace">부분 치환</option>
+      </select>
+      <div class="row">
+        <button class="btn primary" id="quickSave">규칙 저장</button>
+        <button class="btn ghost" id="quickCancel">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <span id="msg"></span>
+
+  <button class="btn block" id="openOptions">규칙 설정 열기</button>
+
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
