@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="theme.css" />
   <style>
+    [hidden] { display: none !important; }
     body { width: 320px; padding: 16px; }
     .top {
       display: flex;
@@ -93,12 +94,39 @@
     #msg.err { color: var(--danger); }
 
     .btn.block { width: 100%; margin-top: 10px; }
+
+    .top .tools { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--muted);
+      cursor: pointer;
+      flex: none;
+    }
+    .icon-btn:hover { background: var(--surface); color: var(--ink); }
+    .icon-btn:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; }
+    .icon-btn svg { width: 17px; height: 17px; display: block; }
   </style>
 </head>
 <body>
   <div class="top">
     <span class="wordmark" id="wordmark">Auto Redirect</span>
-    <button class="master" id="master" role="switch" aria-checked="true" aria-label="자동 리다이렉트 켜기/끄기"></button>
+    <div class="tools">
+      <button class="icon-btn" id="openOptions" aria-label="규칙 설정 열기" title="규칙 설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.77 1.08 1.51 1.1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      <button class="master" id="master" role="switch" aria-checked="true" aria-label="자동 리다이렉트 켜기/끄기"></button>
+    </div>
   </div>
 
   <p class="state" id="state">불러오는 중…</p>
@@ -134,8 +162,6 @@
   </div>
 
   <span id="msg"></span>
-
-  <button class="btn block" id="openOptions">규칙 설정 열기</button>
 
   <script type="module" src="popup.js"></script>
 </body>
