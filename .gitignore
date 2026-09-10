@@ -1,3 +1,6 @@
 .DS_Store
 .omc/
 *.zip
+.env
+node_modules/
+*.log

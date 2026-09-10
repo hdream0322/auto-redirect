@@ -27,33 +27,101 @@
       color: var(--muted);
     }
 
-    section { padding: 24px 0; border-bottom: 1px solid var(--line); }
-    h2 { font-size: 14px; margin: 0 0 12px; letter-spacing: -0.005em; }
-
-    .guide { display: grid; gap: 14px; }
-    .mode {
-      display: grid;
-      grid-template-columns: 128px 1fr;
-      gap: 14px;
+    section { padding: 24px 0; }
+    .section-head {
+      display: flex;
       align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
     }
-    .mode .name { font-weight: 600; }
-    .mode .body { color: var(--muted); margin: 0; }
-    .mode .eg {
+    h2 { font-size: 14px; margin: 0; letter-spacing: -0.005em; }
+
+    /* ── 접이식 도움말 ─────────────────────────────────── */
+    details.help { margin-bottom: 16px; }
+    details.help > summary {
+      list-style: none;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 0;
+      user-select: none;
+    }
+    details.help > summary::-webkit-details-marker { display: none; }
+    details.help > summary::before {
+      content: "＋";
+      font-family: var(--mono);
+      color: var(--route);
+    }
+    details.help[open] > summary::before { content: "－"; }
+    details.help > summary:hover { color: var(--ink); }
+    details.help > summary .when-open { display: none; }
+    details.help[open] > summary .when-open { display: inline; }
+    details.help[open] > summary .when-closed { display: none; }
+
+    .help-body {
+      margin-top: 12px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .help-body dl { margin: 0; display: grid; gap: 13px; }
+    .help-body dt {
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .help-body dt .tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--on);
+      margin-left: 6px;
+    }
+    .help-body dd {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .help-body code {
+      font-family: var(--mono);
+      font-size: 0.92em;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 0 4px;
+    }
+    .help-body .eg {
       display: block;
       margin-top: 5px;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--ink);
-      background: var(--surface);
+      background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 7px 9px;
       white-space: pre-wrap;
       word-break: break-all;
     }
-    .notes { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
-    .notes li { margin: 4px 0; }
+    .help-body .notes {
+      margin: 15px 0 0;
+      padding: 13px 0 0 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .help-body .notes li { margin: 4px 0; }
+
+    /* ── 규칙별 한 줄 안내 ─────────────────────────────── */
+    .rule-hint {
+      grid-column: 1 / -1;
+      margin-top: -2px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
 
     .col-head {
       display: grid;
@@ -74,7 +142,7 @@
     }
     .rule:last-child { border-bottom: 1px solid var(--line); }
     .rule .arrow { text-align: center; color: var(--muted); font-family: var(--mono); }
-    .rule input[type="url"] {
+    .rule input.from, .rule input.to {
       width: 100%;
       font-family: var(--mono);
       font-size: 12.5px;
@@ -84,7 +152,7 @@
       background: var(--paper);
       color: var(--ink);
     }
-    .rule input[type="url"]:focus-visible { outline: 2px solid var(--route); outline-offset: 0; border-color: transparent; }
+    .rule input:focus-visible { outline: 2px solid var(--route); outline-offset: 0; border-color: transparent; }
     .rule select {
       font: inherit;
       padding: 7px 6px;
@@ -103,7 +171,7 @@
       padding: 4px;
     }
     .rule .del:hover { color: var(--danger); }
-    .rule.invalid input[type="url"]:not(:placeholder-shown) { border-color: var(--danger); }
+    .rule.invalid input:not(:placeholder-shown) { border-color: var(--danger); }
 
     .empty { color: var(--muted); padding: 18px 2px; border-top: 1px solid var(--line); }
 
@@ -129,7 +197,6 @@
     #status.err { color: var(--danger); }
 
     @media (max-width: 640px) {
-      .mode { grid-template-columns: 1fr; gap: 4px; }
       .col-head { display: none; }
       .rule {
         grid-template-columns: 1fr 1fr;
@@ -158,42 +225,54 @@
   </header>
 
   <section>
-    <h2>매칭 방식 고르기</h2>
-    <div class="guide">
-      <div class="mode">
-        <span class="name">정확히 일치</span>
-        <p class="body">
-          주소가 글자 하나까지 똑같을 때만 이동합니다(물음표 뒤 검색어까지 포함). 특정 페이지 하나만 바꾸고 싶을 때 쓰세요.
-          <span class="eg">https://wiki.bambulab.com/en/plates
-→ https://wiki.bambulab.com/ko/plates</span>
-        </p>
-      </div>
-      <div class="mode">
-        <span class="name">접두사 일치</span>
-        <p class="body">
-          원본 주소로 <em>시작하는</em> 모든 페이지를 항상 대상 주소 <em>한 곳으로</em> 보냅니다. 하위 페이지가 어디든 무조건 대표 페이지로 모을 때 쓰세요.
-          <span class="eg">https://old.example.com/  로 시작하는 모든 주소
-→ 항상 https://new.example.com/</span>
-        </p>
-      </div>
-      <div class="mode">
-        <span class="name">부분 치환</span>
-        <p class="body">
-          원본 주소로 시작하면, 그 앞부분만 대상 주소로 바꾸고 <em>뒤에 붙은 경로는 그대로</em> 이어 붙입니다. 언어 코드처럼 주소 일부만 바꿀 때 가장 편합니다.
-          <span class="eg">https://wiki.bambulab.com/en/  →  https://wiki.bambulab.com/ko/
-.../en/무엇이든  ⇒  .../ko/무엇이든  (뒤 경로 유지)</span>
-        </p>
-      </div>
+    <div class="section-head">
+      <h2>내 규칙</h2>
     </div>
-    <ul class="notes">
-      <li><strong>http://</strong> 또는 <strong>https://</strong> 로 시작하는 전체 주소를 넣어 주세요. 그 외 형식은 저장돼도 적용되지 않습니다.</li>
-      <li>규칙이 겹치면 <strong>더 구체적인 규칙</strong>(원본 주소가 긴 것, 정확히 일치 &gt; 부분 치환 &gt; 접두사 일치)이 먼저 적용됩니다.</li>
-      <li>규칙은 로그인한 Chrome 사이에 동기화됩니다. 저장 용량이 제한돼 있어 규칙이 수십 개를 넘으면 저장이 거부될 수 있어요.</li>
-    </ul>
-  </section>
 
-  <section>
-    <h2>내 규칙</h2>
+    <details class="help">
+      <summary><span class="when-closed">매칭 방식 설명 보기</span><span class="when-open">매칭 방식 설명 닫기</span></summary>
+      <div class="help-body">
+        <dl>
+          <dt>도메인 전체<span class="tag">추천</span></dt>
+          <dd>
+            그 사이트면 <code>www.</code> 유무, <code>http/https</code>, <code>m.</code> 같은 하위 도메인,
+            뒤에 붙는 경로·검색어를 전부 무시하고 대상 주소로 보냅니다. 원본에는 도메인만 적어도 됩니다.
+            사이트 자체를 다른 사이트로 바꿀 때 쓰세요.
+            <span class="eg">naver.com  →  https://daum.net
+(www.naver.com, m.naver.com, naver.com/news … 모두 이동)</span>
+          </dd>
+          <dt>정확히 일치</dt>
+          <dd>
+            주소가 그 페이지 하나와 똑같을 때만 이동합니다(물음표 뒤 검색어까지 포함).
+            <code>http/https</code> 차이와 맨 끝 <code>/</code> 유무만 같은 것으로 봅니다.
+            <span class="eg">https://wiki.bambulab.com/en/plates
+→ https://wiki.bambulab.com/ko/plates</span>
+          </dd>
+          <dt>접두사 일치</dt>
+          <dd>
+            원본 주소로 시작하는 모든 페이지를 대상 주소 한 곳으로 모읍니다.
+            도메인 전체와 달리 특정 경로 하위(<code>/blog/</code> 아래 등)만 골라낼 수 있습니다.
+            <span class="eg">https://old.example.com/blog/ 로 시작하는 모든 주소
+→ 항상 https://new.example.com/</span>
+          </dd>
+          <dt>부분 치환</dt>
+          <dd>
+            원본 주소로 시작하면 그 앞부분만 대상 주소로 바꾸고 뒤 경로는 그대로 이어 붙입니다.
+            언어 코드처럼 주소 일부만 바꿀 때 편합니다.
+            <span class="eg">https://wiki.bambulab.com/en/  →  https://wiki.bambulab.com/ko/
+.../en/무엇이든  ⇒  .../ko/무엇이든  (뒤 경로 유지)</span>
+          </dd>
+        </dl>
+        <ul class="notes">
+          <li>대상 주소는 <code>http://</code>·<code>https://</code> 로 시작하는 전체 주소로 넣어 주세요(생략하면 <code>https://</code> 로 봅니다).</li>
+          <li>접두사·부분 치환은 <code>www.</code> 유무와 <code>http/https</code> 차이를 무시합니다.</li>
+          <li>대상이 원본과 같은 도메인이면 무한 리다이렉트가 되므로 그 규칙은 자동으로 건너뜁니다.</li>
+          <li>규칙이 겹치면 더 구체적인 규칙(원본 주소가 긴 것, 정확히 일치 &gt; 부분 치환 &gt; 접두사 일치 &gt; 도메인 전체)이 먼저 적용됩니다.</li>
+          <li>규칙은 로그인한 Chrome 사이에 동기화되며, 수십 개를 넘으면 저장 용량 제한으로 거부될 수 있습니다.</li>
+        </ul>
+      </div>
+    </details>
+
     <div class="col-head">
       <span>원본 주소 (여기에 접속하면)</span><span></span><span>대상 주소 (이곳으로 이동)</span><span>매칭 방식</span><span>사용</span><span></span>
     </div>

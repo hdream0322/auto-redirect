@@ -6,6 +6,12 @@ const wordmarkEl = document.getElementById("wordmark");
 const stateEl = document.getElementById("state");
 const countEl = document.getElementById("count");
 
+function withScheme(value) {
+  const v = String(value || "").trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  return "https://" + v.replace(/^\/+/, "");
+}
+
 function isHttpUrl(value) {
   try {
     const u = new URL(value);
@@ -15,10 +21,21 @@ function isHttpUrl(value) {
   }
 }
 
+function ruleActive(r) {
+  if (r.enabled === false || !r.from || !r.to) return false;
+  if (!isHttpUrl(withScheme(r.to))) return false;
+  if (r.mode === "site") {
+    try {
+      return new URL(withScheme(r.from)).hostname.includes(".");
+    } catch {
+      return false;
+    }
+  }
+  return isHttpUrl(withScheme(r.from)) && withScheme(r.from) !== withScheme(r.to);
+}
+
 function paint(enabled, rules) {
-  const active = rules.filter(
-    (r) => r.enabled !== false && isHttpUrl(r.from) && isHttpUrl(r.to) && r.from !== r.to
-  ).length;
+  const active = rules.filter(ruleActive).length;
 
   masterEl.setAttribute("aria-checked", String(enabled));
   wordmarkEl.setAttribute("data-on", String(enabled));
