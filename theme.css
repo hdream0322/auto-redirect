@@ -1,0 +1,132 @@
+/* Auto Redirect — 공용 테마 토큰 & 컴포넌트 (popup + options 공유) */
+
+:root {
+  color-scheme: light dark;
+
+  --paper: #ffffff;
+  --surface: #f4f5f7;
+  --surface-2: #eceef2;
+  --line: #e2e4ea;
+  --ink: #191b22;
+  --muted: #666b78;
+  --route: #4338ca;        /* 활성 경로 색 */
+  --route-soft: #eef0fb;
+  --on: #15803d;
+  --danger: #c62a1c;
+
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+    system-ui, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16181e;
+    --surface: #1d2027;
+    --surface-2: #262a33;
+    --line: #2e333d;
+    --ink: #e8eaef;
+    --muted: #99a0ac;
+    --route: #a5b4fc;
+    --route-soft: #23263a;
+    --on: #4ade80;
+    --danger: #f87171;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--route); }
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.wordmark .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: none;
+}
+.wordmark[data-on="true"] .dot {
+  background: var(--on);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--on) 22%, transparent);
+}
+
+/* ── 마스터 스위치: 이 UI의 주인공 ───────────────────────── */
+.master {
+  --h: 30px;
+  --shift: 28px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 58px;
+  height: var(--h);
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background .18s ease;
+  flex: none;
+}
+.master::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(var(--h) - 6px);
+  height: calc(var(--h) - 6px);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .28);
+  transition: transform .18s cubic-bezier(.3, 1.4, .5, 1);
+}
+.master[aria-checked="true"] {
+  background: var(--route);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+.master[aria-checked="true"]::after { transform: translateX(var(--shift)); }
+.master:focus-visible { outline: 2px solid var(--route); outline-offset: 3px; }
+.master.sm { --h: 22px; --shift: 16px; width: 44px; }
+
+/* ── 버튼 ─────────────────────────────────────────────── */
+.btn {
+  font: inherit;
+  font-weight: 550;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn:hover { background: var(--surface); }
+.btn.primary {
+  background: var(--route);
+  border-color: var(--route);
+  color: #fff;
+}
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { border-color: transparent; color: var(--muted); }
+.btn:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .master, .master::after { transition: none; }
+}

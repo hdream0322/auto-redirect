@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    body { width: 300px; padding: 16px; }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .wordmark { font-size: 15px; }
+    .state {
+      margin: 14px 0 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .state b { color: var(--ink); font-weight: 600; }
+    .count {
+      display: block;
+      margin-top: 2px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .btn.primary { width: 100%; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <span class="wordmark" id="wordmark"><span class="dot"></span>Auto Redirect</span>
+    <button class="master" id="master" role="switch" aria-checked="true" aria-label="자동 리다이렉트 켜기/끄기"></button>
+  </div>
+
+  <p class="state" id="state">불러오는 중…</p>
+  <span class="count" id="count"></span>
+
+  <button class="btn primary" id="openOptions">규칙 설정 열기</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
