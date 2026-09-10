@@ -50,22 +50,8 @@ body {
 a { color: var(--route); }
 
 .wordmark {
-  display: flex;
-  align-items: center;
-  gap: 9px;
   font-weight: 650;
   letter-spacing: -0.01em;
-}
-.wordmark .dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--muted);
-  flex: none;
-}
-.wordmark[data-on="true"] .dot {
-  background: var(--on);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--on) 22%, transparent);
 }
 
 /* ── 마스터 스위치: 이 UI의 주인공 ───────────────────────── */
@@ -95,8 +81,8 @@ a { color: var(--route); }
   height: calc(var(--h) - 6px);
   border-radius: 50%;
   background: var(--paper);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .28);
-  transition: transform .18s cubic-bezier(.3, 1.4, .5, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+  transition: transform .15s ease;
 }
 .master[aria-checked="true"] {
   background: var(--route);
@@ -104,7 +90,7 @@ a { color: var(--route); }
 }
 .master[aria-checked="true"]::after { transform: translateX(var(--shift)); }
 .master:focus-visible { outline: 2px solid var(--route); outline-offset: 3px; }
-.master.sm { --h: 22px; --shift: 16px; width: 44px; }
+.master.sm { --h: 22px; --shift: 22px; width: 44px; }
 
 /* ── 버튼 ─────────────────────────────────────────────── */
 .btn {

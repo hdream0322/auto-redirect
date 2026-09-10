@@ -18,7 +18,6 @@ import {
 } from "./storage.js";
 
 const masterEl = document.getElementById("master");
-const wordmarkEl = document.getElementById("wordmark");
 const stateEl = document.getElementById("state");
 const countEl = document.getElementById("count");
 const noticeEl = document.getElementById("notice");
@@ -55,7 +54,6 @@ function paint(enabled, rules, groups, snooze) {
   const snoozed = Boolean(snooze && snooze.until > Date.now());
 
   masterEl.setAttribute("aria-checked", String(enabled));
-  wordmarkEl.setAttribute("data-on", String(enabled && !snoozed));
 
   if (snoozed) {
     stateEl.innerHTML = `<b>일시 정지 중</b> — 규칙은 그대로 두고 잠시만 쉬고 있습니다.`;
@@ -101,7 +99,6 @@ async function load() {
   // 청크가 덜 동기화된 상태에서 "규칙 0개"라고 말하거나 그 위에 덧쓰면 안 된다.
   if (!result.ok) {
     masterEl.setAttribute("aria-checked", String(enabled));
-    wordmarkEl.setAttribute("data-on", "false");
     stateEl.innerHTML = `<b>규칙을 불러오지 못했습니다</b> — 동기화를 기다리는 중입니다. 잠시 뒤 다시 열어 주세요.`;
     countEl.textContent = "";
     quickToggle.disabled = true;

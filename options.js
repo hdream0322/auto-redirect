@@ -40,7 +40,6 @@ const groupsEl = document.getElementById("groups");
 const statusEl = document.getElementById("status");
 const masterEl = document.getElementById("master");
 const masterLabelEl = document.getElementById("masterLabel");
-const wordmarkEl = document.getElementById("wordmark");
 const searchEl = document.getElementById("search");
 const sortEl = document.getElementById("sort");
 const snoozeStateEl = document.getElementById("snoozeState");
@@ -362,7 +361,7 @@ function groupSection(group, indices) {
   const add = document.createElement("button");
   add.type = "button";
   add.className = "btn";
-  add.textContent = "＋ 규칙 추가";
+  add.textContent = "규칙 추가";
   add.addEventListener("click", () => {
     state.rules.push(normalizeRule({ groupId: group.id }));
     render();
@@ -433,7 +432,6 @@ document.getElementById("reload").addEventListener("click", () => location.reloa
 function paintMaster(enabled) {
   masterEl.setAttribute("aria-checked", String(enabled));
   masterLabelEl.textContent = enabled ? "켜짐" : "꺼짐";
-  wordmarkEl.setAttribute("data-on", String(enabled));
 }
 
 masterEl.addEventListener("click", async () => {

@@ -66,22 +66,18 @@
     details.help > summary {
       list-style: none;
       cursor: pointer;
-      font-size: 12.5px;
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 0;
+      font-size: 13px;
+      color: var(--ink);
+      display: inline-block;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
       user-select: none;
     }
     details.help > summary::-webkit-details-marker { display: none; }
-    details.help > summary::before {
-      content: "＋";
-      font-family: var(--mono);
-      color: var(--route);
-    }
-    details.help[open] > summary::before { content: "－"; }
-    details.help > summary:hover { color: var(--ink); }
+    details.help > summary:hover { background: var(--surface); }
+    details.help > summary:focus-visible { outline: 2px solid var(--route); outline-offset: 2px; }
     details.help > summary .when-open { display: none; }
     details.help[open] > summary .when-open { display: inline; }
     details.help[open] > summary .when-closed { display: none; }
@@ -287,16 +283,12 @@
       user-select: none;
     }
     details.adv > summary::-webkit-details-marker { display: none; }
-    details.adv > summary::before { content: "▸"; color: var(--route); }
+    details.adv > summary::before { content: "▸"; color: var(--muted); }
     details.adv[open] > summary::before { content: "▾"; }
     details.adv > summary:hover { color: var(--ink); }
     details.adv > summary .badge {
-      font-family: var(--mono);
-      font-size: 10.5px;
-      color: var(--route);
-      background: var(--route-soft);
-      border-radius: 999px;
-      padding: 1px 7px;
+      font-size: 11px;
+      color: var(--muted);
     }
     .adv-body {
       margin-top: 9px;
@@ -384,8 +376,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: color-mix(in srgb, var(--paper) 92%, transparent);
-      backdrop-filter: blur(8px);
+      background: var(--paper);
       border-top: 1px solid var(--line);
     }
     .bar .inner {
@@ -420,7 +411,7 @@
 <div class="wrap">
   <header>
     <div>
-      <span class="wordmark" id="wordmark"><span class="dot"></span>Ultimate Auto Redirecter</span>
+      <span class="wordmark" id="wordmark">Auto Redirect</span>
       <p>정해 둔 주소에 접속하면 원하는 주소로 대신 열어 줍니다. 문서의 언어를 항상 한국어로 보거나, 옛 주소를 새 주소로 넘길 때 쓰기 좋아요.</p>
     </div>
     <div class="switch-wrap">
@@ -454,7 +445,7 @@
     </div>
 
     <details class="help">
-      <summary><span class="when-closed">매칭 방식 설명 보기</span><span class="when-open">매칭 방식 설명 닫기</span></summary>
+      <summary><span class="when-closed">매칭 방식 5가지 설명 보기</span><span class="when-open">설명 닫기</span></summary>
       <div class="help-body">
         <dl>
           <dt>도메인 전체<span class="tag">추천</span></dt>
@@ -514,7 +505,7 @@
         <option value="recent">최근 추가순</option>
         <option value="mode">매칭 방식순</option>
       </select>
-      <button class="btn" id="addGroup">＋ 그룹</button>
+      <button class="btn" id="addGroup">그룹 추가</button>
       <button class="btn" id="export">내보내기</button>
       <button class="btn" id="import">가져오기</button>
       <input type="file" id="importFile" accept="application/json,.json" />
