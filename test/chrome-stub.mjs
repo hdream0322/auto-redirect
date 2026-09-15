@@ -3,7 +3,10 @@
 export function installChromeStub() {
   const sync = {};
   const local = {};
+  const session = {};
   const listeners = [];
+  let generation = 0;
+  const nav = { before: [], dom: [], injections: [] };
 
   const area = (bag) => ({
     async get(k) {
@@ -36,7 +39,12 @@ export function installChromeStub() {
   };
 
   globalThis.chrome = {
-    storage: { sync: area(sync), local: area(local), onChanged: { addListener: (f) => listeners.push(f) } },
+    storage: {
+      sync: area(sync),
+      local: area(local),
+      session: area(session),
+      onChanged: { addListener: (f) => listeners.push(f) },
+    },
     runtime: { onInstalled: { addListener() {} }, onStartup: { addListener() {} } },
     alarms: {
       created: new Map(),
@@ -52,12 +60,37 @@ export function installChromeStub() {
       onAlarm: { addListener() {} },
     },
     declarativeNetRequest: dnr,
+    webNavigation: {
+      onBeforeNavigate: { addListener: (f) => nav.before.push(f) },
+      onDOMContentLoaded: { addListener: (f) => nav.dom.push(f) },
+    },
+    scripting: {
+      async executeScript(opts) {
+        nav.injections.push(opts);
+      },
+    },
+    tabs: { onRemoved: { addListener() {} } },
   };
 
   return {
     sync,
     local,
+    session,
     dnr,
+    nav,
+    // 서비스 워커가 종료됐다 다시 뜨는 상황: 메모리 상태만 날아가고 저장소는 남는다.
+    async restartWorker() {
+      nav.before.length = 0;
+      nav.dom.length = 0;
+      listeners.length = 0;
+      await import(`../background.js?worker=${++generation}`);
+    },
+    // 네비게이션 이벤트를 흉내 내 앵커 동기화 경로를 태운다.
+    async navigate(startUrl, committedUrl, tabId = 1) {
+      nav.injections.length = 0;
+      for (const f of nav.before) await f({ frameId: 0, tabId, url: startUrl });
+      for (const f of nav.dom) await f({ frameId: 0, tabId, url: committedUrl });
+    },
     // background.js 의 storage.onChanged 리스너를 깨워 규칙을 다시 적용시킨다.
     async apply() {
       for (const f of listeners) await f({ redirectRules_meta: {} }, "sync");
@@ -66,6 +99,7 @@ export function installChromeStub() {
     async clear() {
       for (const k of Object.keys(sync)) delete sync[k];
       for (const k of Object.keys(local)) delete local[k];
+      for (const k of Object.keys(session)) delete session[k];
       dnr.rules = [];
       dnr.reject = null;
     },

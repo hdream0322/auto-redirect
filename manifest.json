@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Ultimate Auto Redirecter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "미리 저장한 규칙에 따라 특정 사이트 접속 시 지정한 사이트로 자동 리다이렉트합니다. 그룹·시간 조건·제외 패턴·정규식까지 지원합니다.",
-  "permissions": ["declarativeNetRequest", "storage", "alarms", "activeTab"],
+  "permissions": ["declarativeNetRequest", "storage", "alarms", "activeTab", "webNavigation", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js",

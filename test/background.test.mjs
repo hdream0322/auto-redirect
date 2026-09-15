@@ -235,6 +235,69 @@ test("배치 실패 시 규칙 단위로 되살리고 고아 allow 를 남기지
   assert.match(env.local.redirectNotice.text, /"bad\.com"/);
 });
 
+/* ── 리다이렉트 후 #앵커 위치 맞추기 ── */
+
+test("앵커 동기화: replace 규칙에서 리다이렉트되면 원본 URL 로 스크립트를 주입한다", async () => {
+  await apply([{ from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace" }]);
+  await env.navigate(
+    "https://wiki.b.com/en/software/fill-patterns#infill-of-the-top",
+    "https://wiki.b.com/ko/software/fill-patterns"
+  );
+  assert.equal(env.nav.injections.length, 1);
+  assert.deepEqual(env.nav.injections[0].args, [
+    "https://wiki.b.com/en/software/fill-patterns#infill-of-the-top",
+    "infill-of-the-top",
+  ]);
+});
+
+test("앵커 동기화: #앵커가 없으면 주입하지 않는다", async () => {
+  await apply([{ from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace" }]);
+  await env.navigate("https://wiki.b.com/en/software/fill-patterns", "https://wiki.b.com/ko/software/fill-patterns");
+  assert.equal(env.nav.injections.length, 0);
+});
+
+test("앵커 동기화: 리다이렉트가 없으면(주소가 그대로면) 주입하지 않는다", async () => {
+  await apply([{ from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace" }]);
+  await env.navigate("https://other.com/page#x", "https://other.com/page");
+  assert.equal(env.nav.injections.length, 0);
+});
+
+test("앵커 동기화: syncAnchor=false 규칙은 추적하지 않는다", async () => {
+  await apply([
+    { from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace", syncAnchor: false },
+  ]);
+  await env.navigate("https://wiki.b.com/en/x#y", "https://wiki.b.com/ko/x");
+  assert.equal(env.nav.injections.length, 0);
+});
+
+test("앵커 동기화: 서비스 워커가 재시작해도 규칙을 다시 읽어 주입한다", async () => {
+  await apply([{ from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace" }]);
+  // 워커가 죽었다 살아나면 메모리에 있던 매처가 사라진다 — 저장소에서 다시 만들어야 한다.
+  await env.restartWorker();
+  await env.navigate(
+    "https://wiki.b.com/en/software/fill-patterns#infill-of-the-top",
+    "https://wiki.b.com/ko/software/fill-patterns"
+  );
+  assert.equal(env.nav.injections.length, 1);
+});
+
+test("앵커 동기화: 두 이벤트 사이에 워커가 죽어도 대기 기록이 남는다", async () => {
+  await apply([{ from: "https://wiki.b.com/en/", to: "https://wiki.b.com/ko/", mode: "replace" }]);
+  const src = "https://wiki.b.com/en/x#y";
+  env.nav.injections.length = 0;
+  for (const f of env.nav.before) await f({ frameId: 0, tabId: 7, url: src });
+  await env.restartWorker(); // onBeforeNavigate 와 onDOMContentLoaded 사이에서 종료
+  for (const f of env.nav.dom) await f({ frameId: 0, tabId: 7, url: "https://wiki.b.com/ko/x" });
+  assert.equal(env.nav.injections.length, 1);
+  assert.deepEqual(env.nav.injections[0].args, [src, "y"]);
+});
+
+test("앵커 동기화: site 모드는 대상이 아니다", async () => {
+  await apply([{ from: "wiki.b.com", to: "https://wiki.b.com/ko/home", mode: "site" }]);
+  await env.navigate("https://wiki.b.com/en/x#y", "https://wiki.b.com/ko/home");
+  assert.equal(env.nav.injections.length, 0);
+});
+
 test("onChanged 가 연달아 와도 한 번만 적용한다", async () => {
   await apply([{ from: "a.com", to: "https://x.com", mode: "site" }]);
   let calls = 0;

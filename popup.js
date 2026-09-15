@@ -25,6 +25,8 @@ const snoozeStateEl = document.getElementById("snoozeState");
 const snoozeClearEl = document.getElementById("snoozeClear");
 const msgEl = document.getElementById("msg");
 
+let msgTimer;
+
 const quickToggle = document.getElementById("quickToggle");
 const quickForm = document.getElementById("quickForm");
 const quickSiteEl = document.getElementById("quickSite");
@@ -38,8 +40,10 @@ let currentSnooze = null;
 const snoozeBtns = [...document.querySelectorAll("[data-snooze]")];
 
 function showMsg(text, kind = "") {
+  clearTimeout(msgTimer);
   msgEl.textContent = text;
   msgEl.className = kind;
+  if (text) msgTimer = setTimeout(() => (msgEl.textContent = ""), 5000);
 }
 
 function paintNotice(text) {

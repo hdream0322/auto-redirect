@@ -123,6 +123,13 @@ function ruleRow(rule) {
             물음표 뒤 검색어 떼고 이동 (부분 치환 전용)
           </label>
         </div>
+        <div class="opt-anchor" hidden>
+          <label class="checkline">
+            <input type="checkbox" class="syncAnchor" />
+            리다이렉트 후 <code>#</code> 앵커 위치로 스크롤 맞추기
+          </label>
+          <p class="note">목적지 페이지에 같은 앵커가 없어도(예: 번역된 위키) 제목 순서를 맞춰 그 위치로 이동합니다. 원본 페이지를 한 번 더 받아오므로 살짝 느려질 수 있습니다.</p>
+        </div>
         <div>
           <h4>제외 패턴</h4>
           <textarea class="exclude" placeholder="naver.com/admin&#10;*/login*"></textarea>
@@ -152,6 +159,8 @@ function ruleRow(rule) {
   const badge = div.querySelector(".badge");
   const optQuery = div.querySelector(".opt-query");
   const dropQuery = div.querySelector(".dropQuery");
+  const optAnchor = div.querySelector(".opt-anchor");
+  const syncAnchor = div.querySelector(".syncAnchor");
   const exclude = div.querySelector(".exclude");
   const daysEl = div.querySelector(".days");
   const start = div.querySelector(".start");
@@ -162,6 +171,7 @@ function ruleRow(rule) {
   mode.value = rule.mode;
   enabled.setAttribute("aria-checked", String(rule.enabled !== false));
   dropQuery.checked = rule.dropQuery === true;
+  syncAnchor.checked = rule.syncAnchor !== false;
   exclude.value = rule.exclude.join("\n");
   start.value = rule.schedule?.start || "";
   end.value = rule.schedule?.end || "";
@@ -195,6 +205,8 @@ function ruleRow(rule) {
     if (rule.exclude.length) bits.push(`제외 ${rule.exclude.length}`);
     if (rule.schedule) bits.push("시간");
     if (rule.dropQuery && rule.mode === "replace") bits.push("검색어 제거");
+    if (rule.syncAnchor === false && (rule.mode === "replace" || rule.mode === "regex"))
+      bits.push("앵커 맞춤 끔");
     badge.textContent = bits.join(" · ");
     badge.hidden = bits.length === 0;
   };
@@ -208,6 +220,7 @@ function ruleRow(rule) {
       to.placeholder = "https://daum.net";
     }
     optQuery.hidden = rule.mode !== "replace";
+    optAnchor.hidden = rule.mode !== "replace" && rule.mode !== "regex";
   };
 
   // 형식 오류와 무한 리다이렉트를 함께 본다.
@@ -253,6 +266,10 @@ function ruleRow(rule) {
     rule.dropQuery = dropQuery.checked;
     paintBadge();
     validate();
+  });
+  syncAnchor.addEventListener("change", () => {
+    rule.syncAnchor = syncAnchor.checked;
+    paintBadge();
   });
   exclude.addEventListener("input", () => {
     rule.exclude = exclude.value

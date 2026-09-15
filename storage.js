@@ -64,6 +64,9 @@ export function normalizeRule(r) {
     enabled: rule.enabled !== false,
     groupId: typeof rule.groupId === "string" ? rule.groupId : UNGROUPED_ID,
     dropQuery: rule.dropQuery === true,
+    // 리다이렉트로 주소가 바뀌면서 원본의 #앵커가 목적지에서 안 먹힐 때,
+    // "몇 번째 제목이었는지"로 스크롤 위치를 맞춰 준다(기본 켬).
+    syncAnchor: rule.syncAnchor !== false,
     exclude: Array.isArray(rule.exclude)
       ? rule.exclude.map((s) => String(s).trim()).filter(Boolean)
       : [],

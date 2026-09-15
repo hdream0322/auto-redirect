@@ -341,6 +341,8 @@ async function applyRules() {
     }
   }
 
+  updateAnchorSyncMatchers(rules, groupMap, masterEnabled && !snoozed);
+
   const notes = [...bundles.notes];
   if (bundles.truncated) {
     notes.push(
@@ -371,6 +373,197 @@ async function syncAlarms(rules, snooze) {
   if (snooze && snooze.until > Date.now()) {
     chrome.alarms.create(SNOOZE_ALARM, { when: snooze.until + 500 });
   }
+}
+
+/* ── 리다이렉트 후 #앵커 위치 맞추기 ──────────────────── */
+// DNR 리다이렉트는 원본 URL 의 #프래그먼트를 확장에 넘겨주지 않고,
+// 넘어가더라도 번역된 위키처럼 목적지의 제목 id 가 다르면 스크롤이 안 된다.
+// 그래서 replace / regex 규칙에 한해, 네비게이션을 지켜보다가 리다이렉트로
+// 주소가 바뀌면 목적지 페이지에서 "원본의 그 앵커가 몇 번째 제목이었는지"를
+// 계산해 같은 순서의 제목으로 스크롤한다.
+
+// 서비스 워커는 이벤트를 처리하고 나면 곧 종료된다. 그래서 매처와 대기 기록을
+// 메모리에만 두면, 다음 네비게이션 때 막 깨어난 워커에서는 둘 다 비어 있어
+// 앵커 맞추기가 통째로 건너뛰어진다. 매처는 필요할 때 저장소에서 다시 만들고,
+// 대기 기록은 storage.session 에 둬서 워커가 죽었다 살아나도 이어지게 한다.
+
+let anchorSyncMatchers = null; // [RegExp] | null(아직 안 만듦) — 걸리는 주소만 추적한다.
+
+function updateAnchorSyncMatchers(rules, groupMap, active) {
+  const matchers = [];
+  if (active) {
+    for (const rule of rules) {
+      if (rule.syncAnchor === false) continue;
+      if (rule.mode !== "replace" && rule.mode !== "regex") continue;
+      if (!ruleIsValid(rule, groupMap)) continue;
+      try {
+        matchers.push(new RegExp(buildRegexFilter(rule)));
+      } catch {
+        /* 깨진 정규식은 건너뛴다 — DNR 쪽에서 이미 걸러진다 */
+      }
+    }
+  }
+  anchorSyncMatchers = matchers;
+  return matchers;
+}
+
+// 워커가 막 깨어난 상태(매처 없음)면 저장소에서 규칙을 읽어 다시 만든다.
+async function ensureAnchorSyncMatchers() {
+  if (anchorSyncMatchers) return anchorSyncMatchers;
+  const [result, groups, masterEnabled, snooze] = await Promise.all([
+    loadRules(),
+    loadGroups(),
+    loadEnabled(),
+    loadSnooze(),
+  ]);
+  if (!result.ok) return []; // 다음 기회에 다시 만든다(캐시하지 않는다).
+  const groupMap = new Map(groups.map((g) => [g.id, g]));
+  const snoozed = Boolean(snooze && snooze.until > Date.now());
+  return updateAnchorSyncMatchers(result.rules, groupMap, masterEnabled && !snoozed);
+}
+
+/* 대기 기록: tabId -> { base, hash, url } */
+
+const PENDING_PREFIX = "anchorPending:";
+const pendingFallback = new Map(); // storage.session 이 없는 브라우저 대비
+
+function sessionArea() {
+  return chrome.storage && chrome.storage.session ? chrome.storage.session : null;
+}
+
+async function setPendingAnchor(tabId, rec) {
+  const area = sessionArea();
+  if (!area) return void pendingFallback.set(tabId, rec);
+  await area.set({ [PENDING_PREFIX + tabId]: rec });
+}
+
+async function takePendingAnchor(tabId) {
+  const area = sessionArea();
+  if (!area) {
+    const rec = pendingFallback.get(tabId);
+    pendingFallback.delete(tabId);
+    return rec;
+  }
+  const key = PENDING_PREFIX + tabId;
+  const got = await area.get(key);
+  if (got && got[key]) await area.remove(key);
+  return got ? got[key] : undefined;
+}
+
+async function clearPendingAnchor(tabId) {
+  const area = sessionArea();
+  if (!area) return void pendingFallback.delete(tabId);
+  await area.remove(PENDING_PREFIX + tabId);
+}
+
+function splitHash(url) {
+  const i = url.indexOf("#");
+  return i === -1 ? [url, ""] : [url.slice(0, i), url.slice(i + 1)];
+}
+
+if (chrome.webNavigation) {
+  chrome.webNavigation.onBeforeNavigate.addListener(async (d) => {
+    if (d.frameId !== 0) return;
+    const [base, hash] = splitHash(d.url);
+    if (!hash) return void (await clearPendingAnchor(d.tabId));
+    const matchers = await ensureAnchorSyncMatchers();
+    if (matchers.some((re) => re.test(base))) {
+      await setPendingAnchor(d.tabId, { base, hash, url: d.url });
+    } else {
+      await clearPendingAnchor(d.tabId);
+    }
+  });
+
+  chrome.webNavigation.onDOMContentLoaded.addListener(async (d) => {
+    if (d.frameId !== 0) return;
+    const rec = await takePendingAnchor(d.tabId);
+    if (!rec) return;
+    // 리다이렉트가 실제로 일어나 주소가 바뀐 경우에만 손댄다.
+    if (splitHash(d.url)[0] === rec.base) return;
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: d.tabId },
+        func: scrollToSyncedAnchor,
+        args: [rec.url, rec.hash],
+      });
+    } catch (e) {
+      console.warn("[Auto Redirect] 앵커 위치 맞추기 실패:", e);
+    }
+  });
+
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    clearPendingAnchor(tabId);
+  });
+}
+
+// 페이지 컨텍스트에서 실행된다 — 바깥 변수를 참조하면 안 된다(함수가 직렬화됨).
+async function scrollToSyncedAnchor(originalUrl, rawHash) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  let id;
+  try {
+    id = decodeURIComponent(String(rawHash || "")).trim();
+  } catch {
+    id = String(rawHash || "").trim();
+  }
+  if (!id) return;
+
+  const HEAD = "h1,h2,h3,h4,h5,h6";
+  const esc = (s) => (window.CSS && CSS.escape ? CSS.escape(s) : s.replace(/["\\]/g, "\\$&"));
+
+  // 일부 위키(wiki.js 등)는 SSR 본문을 <template> 안에 넣어 두고 나중에 hydrate 한다.
+  // fetch 로 받은 문서에선 <template> 안이 일반 DOM 트리에 없으므로 따로 긁어 온다.
+  const collectHeads = (root) => {
+    const direct = [...root.querySelectorAll(HEAD)];
+    if (direct.length) return direct;
+    for (const tpl of root.querySelectorAll("template")) {
+      const inner = [...tpl.content.querySelectorAll(HEAD)];
+      if (inner.length) return inner;
+    }
+    return direct;
+  };
+
+  // 제목이 렌더될 때까지 잠깐 기다린다(클라이언트 렌더 위키 대비).
+  for (let i = 0; i < 20 && document.querySelectorAll(HEAD).length === 0; i++) await wait(150);
+
+  const go = (el) => {
+    if (!el) return false;
+    if (!el.style.scrollMarginTop) el.style.scrollMarginTop = "80px";
+    el.scrollIntoView();
+    return true;
+  };
+
+  // 1) 목적지에 같은 앵커가 있으면 그대로 쓴다.
+  if (
+    go(document.getElementById(id)) ||
+    go(document.querySelector(`a[name="${esc(id)}"]`))
+  ) {
+    return;
+  }
+
+  // 2) 원본(리다이렉트 전) 페이지를 받아 그 앵커가 몇 번째 제목인지 계산한다.
+  let srcDoc;
+  try {
+    const res = await fetch(originalUrl, { credentials: "omit", redirect: "follow" });
+    if (!res.ok) return;
+    srcDoc = new DOMParser().parseFromString(await res.text(), "text/html");
+  } catch {
+    return;
+  }
+
+  const srcHeads = collectHeads(srcDoc);
+  const srcIdx = srcHeads.findIndex(
+    (h) => h.id === id || h.querySelector(`[id="${esc(id)}"]`)
+  );
+  if (srcIdx === -1) return;
+
+  const tag = srcHeads[srcIdx].tagName;
+  const sameLevelBefore = srcHeads.slice(0, srcIdx).filter((h) => h.tagName === tag).length;
+
+  const dstHeads = collectHeads(document);
+  const dstSameLevel = dstHeads.filter((h) => h.tagName === tag);
+
+  // 같은 레벨에서 같은 순번을 먼저, 안 되면 전체 순번으로 대체한다.
+  go(dstSameLevel[sameLevelBefore] || dstHeads[srcIdx]);
 }
 
 /* ── 직렬화 + 디바운스 ────────────────────────────────── */
